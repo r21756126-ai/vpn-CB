@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>کانفیگ پرسرعت</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f4f6fb;--surface:#fff;--card:#fff;--border:#e0e7f0;
+  --accent:#2563eb;--accent2:#f97316;--green:#16a34a;--yellow:#d97706;
+  --red:#dc2626;--text:#1e293b;--muted:#64748b;--radius:14px;
+  --shadow:0 2px 16px rgba(37,99,235,0.09);
+}
+body.dark{
+  --bg:#0f1117;--surface:#181c27;--card:#1e2336;--border:#2a3050;
+  --accent:#60a5fa;--accent2:#f97316;--green:#22c55e;--yellow:#f59e0b;
+  --red:#ef4444;--text:#e8ecf4;--muted:#8892a4;
+  --shadow:0 2px 16px rgba(0,0,0,0.4);
+}
+
+body{font-family:'Vazirmatn',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:0 0 70px;transition:background .4s,color .4s}
+
+/* LOADING */
+#loader{position:fixed;inset:0;background:linear-gradient(135deg,#1d4ed8,#1e40af);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .5s}
+#loader.hide{opacity:0;pointer-events:none}
+.loader-logo{font-size:3.5rem;animation:spin3d 1.5s ease-in-out infinite alternate;filter:drop-shadow(0 0 24px rgba(255,255,255,0.5))}
+@keyframes spin3d{0%{transform:rotateY(0deg) scale(1)}100%{transform:rotateY(30deg) scale(1.1)}}
+.loader-bar{width:180px;height:4px;background:rgba(255,255,255,0.2);border-radius:99px;overflow:hidden}
+.loader-fill{height:100%;background:white;border-radius:99px;animation:fill 1.8s ease forwards}
+@keyframes fill{0%{width:0}100%{width:100%}}
+.loader-text{color:rgba(255,255,255,0.85);font-size:.9rem}
+
+/* LOGIN */
+#loginOverlay{position:fixed;inset:0;background:linear-gradient(135deg,#1d4ed8,#1e40af,#1e3a8a);z-index:9000;display:none;align-items:center;justify-content:center;padding:24px}
+#loginOverlay.show{display:flex}
+#loginBox{background:rgba(255,255,255,.1);padding:32px 26px;border-radius:20px;color:white;backdrop-filter:blur(14px);width:100%;max-width:340px;text-align:center;border:1px solid rgba(255,255,255,.15)}
+#loginBox .lb-icon{font-size:3rem;margin-bottom:10px;display:block}
+#loginBox h2{font-size:1.3rem;margin-bottom:4px}
+#loginBox p{font-size:.82rem;color:rgba(255,255,255,.7);margin-bottom:20px}
+#loginBox .lb-label{font-size:.8rem;color:rgba(255,255,255,.75);margin-bottom:7px;text-align:right}
+#loginBox input{width:100%;padding:13px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.12);color:white;font-family:'Vazirmatn',sans-serif;font-size:.9rem;margin-bottom:14px;outline:none}
+#loginBox input::placeholder{color:rgba(255,255,255,.4)}
+#loginBox button{width:100%;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,#f97316,#ea580c);color:white;font-family:'Vazirmatn',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;transition:opacity .2s}
+#loginBox button:hover{opacity:.88}
+#loginError{color:#fca5a5;font-size:.8rem;margin-top:10px;display:none}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px;position:sticky;top:0;z-index:100;box-shadow:0 1px 8px rgba(0,0,0,.06)}
+.topbar-logo{font-size:1rem;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:8px}
+.topbar-logo span{font-size:1.4rem}
+.topbar-actions{display:flex;gap:8px;align-items:center}
+.icon-btn{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px 10px;cursor:pointer;font-size:.8rem;color:var(--muted);font-family:'Vazirmatn',sans-serif;transition:all .2s;display:flex;align-items:center;gap:4px}
+.icon-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* HEADER */
+header{background:linear-gradient(135deg,#1d4ed8 0%,#2563eb 60%,#1e40af 100%);padding:28px 20px 24px;text-align:center;position:relative;overflow:hidden;box-shadow:0 4px 20px rgba(37,99,235,.25)}
+body.dark header{background:linear-gradient(135deg,#1e3a5f,#1e2d5f)}
+header::before{content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:350px;height:350px;background:radial-gradient(circle,rgba(255,255,255,.1) 0%,transparent 65%);pointer-events:none}
+
+/* 3D LOGO */
+.logo-3d{font-size:3rem;display:inline-block;margin-bottom:10px;filter:drop-shadow(2px 4px 0px rgba(0,0,0,.3)) drop-shadow(-1px -1px 0px rgba(255,255,255,.3));animation:float3d 3s ease-in-out infinite}
+@keyframes float3d{0%,100%{transform:translateY(0) rotateZ(-2deg)}50%{transform:translateY(-6px) rotateZ(2deg)}}
+
+header h1{font-size:1.6rem;font-weight:700;color:white;margin-bottom:4px;text-shadow:0 2px 8px rgba(0,0,0,.2)}
+header p{color:rgba(255,255,255,.8);font-size:.83rem}
+.header-stats{display:flex;justify-content:center;gap:16px;margin-top:14px;flex-wrap:wrap}
+.stat-pill{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);border-radius:30px;padding:5px 14px;font-size:.75rem;color:white;backdrop-filter:blur(4px)}
+
+/* NOTICE */
+.notice-bar{background:linear-gradient(135deg,#fef3c7,#fde68a);border-bottom:1px solid #fcd34d;padding:10px 16px;display:flex;align-items:center;gap:8px;font-size:.8rem;color:#92400e}
+body.dark .notice-bar{background:linear-gradient(135deg,#1c1a08,#2a240a);border-color:#713f12;color:#fbbf24}
+.notice-bar .notice-icon{font-size:1rem;flex-shrink:0}
+.notice-close{margin-right:auto;cursor:pointer;opacity:.6;font-size:1rem}
+
+/* MAIN */
+main{max-width:680px;margin:0 auto;padding:18px 14px 0}
+
+/* TABS */
+.tabs{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:4px;gap:3px;margin-bottom:18px;overflow-x:auto;box-shadow:var(--shadow)}
+.tab{flex:1;padding:9px 4px;border:none;border-radius:10px;background:transparent;color:var(--muted);font-family:'Vazirmatn',sans-serif;font-size:.75rem;cursor:pointer;transition:all .2s;white-space:nowrap}
+.tab.active{background:var(--accent);color:white;font-weight:700;box-shadow:0 2px 8px rgba(37,99,235,.3)}
+
+/* NEWS SECTION */
+.news-card{background:var(--card);border:1px solid var(--border);border-right:4px solid var(--accent2);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.news-card .news-date{font-size:.7rem;color:var(--muted);margin-bottom:4px}
+.news-card .news-title{font-size:.9rem;font-weight:600;margin-bottom:4px}
+.news-card .news-body{font-size:.8rem;color:var(--muted);line-height:1.7}
+
+/* CONFIG CARD */
+.config-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:14px;overflow:hidden;transition:all .2s;box-shadow:var(--shadow)}
+.config-card:hover{border-color:var(--accent);box-shadow:0 4px 20px rgba(37,99,235,.12);transform:translateY(-1px)}
+.config-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 12px;border-bottom:1px solid var(--border)}
+.config-meta{display:flex;align-items:center;gap:10px}
+.config-flag{font-size:1.4rem}
+.config-title{font-size:.93rem;font-weight:600}
+.config-subtitle{font-size:.72rem;color:var(--muted);margin-top:2px}
+.config-updated{font-size:.68rem;color:var(--muted);margin-top:3px;display:flex;align-items:center;gap:4px}
+.badge{font-size:.68rem;padding:3px 9px;border-radius:20px;font-weight:600}
+.badge.fast{background:rgba(22,163,74,.12);color:var(--green);border:1px solid rgba(22,163,74,.25)}
+.badge.normal{background:rgba(217,119,6,.12);color:var(--yellow);border:1px solid rgba(217,119,6,.25)}
+
+.config-body{padding:12px 16px 14px}
+.config-string{background:#f1f5f9;border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:'Courier New',monospace;font-size:.7rem;color:#334155;word-break:break-all;line-height:1.5;user-select:all;margin-bottom:12px;max-height:72px;overflow:hidden;position:relative}
+body.dark .config-string{background:#141720;color:#a5b4d4}
+.config-string::after{content:'';position:absolute;bottom:0;left:0;right:0;height:22px;background:linear-gradient(transparent,#f1f5f9)}
+body.dark .config-string::after{background:linear-gradient(transparent,#141720)}
+
+.btn-row{display:flex;gap:8px}
+.btn{flex:1;padding:10px 0;border:none;border-radius:8px;font-family:'Vazirmatn',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-copy{background:rgba(37,99,235,.1);color:var(--accent);border:1px solid rgba(37,99,235,.2)}
+.btn-copy:hover{background:rgba(37,99,235,.2);transform:translateY(-1px)}
+.btn-copy.copied{background:rgba(22,163,74,.1);color:var(--green);border-color:rgba(22,163,74,.25)}
+.btn-qr{background:rgba(249,115,22,.1);color:var(--accent2);border:1px solid rgba(249,115,22,.2);flex:0 0 52px}
+.btn-qr:hover{background:rgba(249,115,22,.2)}
+
+/* GUIDE */
+.guide-box{background:var(--card);border:1px solid var(--border);border-right:3px solid var(--accent);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.guide-box h3{font-size:.88rem;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.guide-step{display:flex;gap:10px;margin-bottom:9px;align-items:flex-start}
+.step-num{min-width:24px;height:24px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;color:white;margin-top:1px;flex-shrink:0}
+.guide-step p{font-size:.82rem;color:var(--muted);line-height:1.7}
+.guide-step strong{color:var(--text)}
+
+/* APP LINKS */
+.app-links{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.app-link{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 12px;display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);transition:all .18s;box-shadow:var(--shadow)}
+.app-link:hover{border-color:var(--accent);transform:translateY(-2px)}
+.app-icon{font-size:1.7rem}
+.app-info small{font-size:.68rem;color:var(--muted);display:block}
+.app-info span{font-size:.83rem;font-weight:600}
+
+/* VIP */
+.vip-banner{background:linear-gradient(135deg,#1d4ed8,#2563eb);border:none;border-radius:var(--radius);padding:18px 16px;margin-bottom:14px;text-align:center;position:relative;overflow:hidden;box-shadow:0 4px 16px rgba(37,99,235,.3)}
+.vip-banner h3{font-size:1.1rem;font-weight:700;color:white;margin-bottom:6px}
+.vip-banner p{font-size:.82rem;color:rgba(255,255,255,.85)}
+.vip-price{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:var(--shadow)}
+.price-label{font-size:.83rem;color:var(--muted)}
+.price-amount{font-size:1.3rem;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.price-icon{font-size:2rem}
+
+/* PAYMENT */
+.payment-box{background:var(--card);border:2px solid var(--border);border-radius:var(--radius);padding:20px 16px;margin-bottom:14px;box-shadow:var(--shadow)}
+.payment-box h4{font-size:.93rem;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card-number-display{background:linear-gradient(135deg,#1d4ed8,#2563eb);border:none;border-radius:12px;padding:16px 18px;font-family:'Courier New',monospace;font-size:1.1rem;letter-spacing:2px;color:white;margin-bottom:10px;direction:ltr;text-align:center}
+.card-owner{font-size:.82rem;color:var(--muted);text-align:center;margin-bottom:12px}
+.card-owner strong{color:var(--accent)}
+.btn-copy-card{width:100%;padding:11px 0;border:none;border-radius:8px;background:rgba(37,99,235,.1);color:var(--accent);border:1px solid rgba(37,99,235,.2);font-family:'Vazirmatn',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-copy-card:hover{background:rgba(37,99,235,.2)}
+.telegram-box{background:linear-gradient(135deg,rgba(29,155,240,.08),rgba(29,155,240,.04));border:1px solid rgba(29,155,240,.25);border-radius:var(--radius);padding:16px;margin-bottom:14px;text-align:center}
+.telegram-box h4{font-size:.88rem;font-weight:600;margin-bottom:6px}
+.telegram-box p{font-size:.78rem;color:var(--muted);line-height:1.6}
+.tg-id{background:var(--bg);border:1px solid rgba(29,155,240,.25);border-radius:8px;padding:8px 16px;font-family:'Courier New',monospace;font-size:.9rem;color:#38bdf8;display:inline-block;margin:10px 0}
+.btn-tg{display:inline-block;padding:10px 24px;background:linear-gradient(135deg,#1d9bf0,#0f6ab0);color:white;text-decoration:none;border-radius:10px;font-family:'Vazirmatn',sans-serif;font-size:.83rem;font-weight:600;margin-top:10px;transition:opacity .2s}
+.btn-tg:hover{opacity:.85}
+
+/* ADMIN PANEL */
+#adminPanel{background:var(--card);border:2px solid var(--accent);border-radius:var(--radius);padding:18px;margin-bottom:14px;display:none}
+#adminPanel h3{font-size:.95rem;font-weight:700;margin-bottom:14px;color:var(--accent)}
+.admin-input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-family:'Vazirmatn',sans-serif;font-size:.83rem;margin-bottom:8px;outline:none}
+.admin-input:focus{border-color:var(--accent)}
+.btn-admin{padding:10px 20px;border:none;border-radius:8px;background:var(--accent);color:white;font-family:'Vazirmatn',sans-serif;font-size:.83rem;font-weight:600;cursor:pointer}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center;padding:24px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:26px 22px 22px;text-align:center;max-width:300px;width:100%}
+.modal h3{font-size:.95rem;margin-bottom:16px;color:var(--text)}
+.modal img{border-radius:8px;background:white;padding:10px;max-width:200px}
+.modal-close{margin-top:16px;padding:10px 28px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:'Vazirmatn',sans-serif;font-size:.83rem;cursor:pointer}
+
+/* SECTION LABEL */
+.section-label{font-size:.7rem;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;margin-top:4px;display:flex;align-items:center;justify-content:space-between}
+.config-count{background:var(--accent);color:white;border-radius:20px;padding:2px 10px;font-size:.7rem;font-weight:700}
+
+/* TAB PANEL */
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* TOAST */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:white;padding:10px 22px;border-radius:30px;font-size:.83rem;font-weight:600;transition:transform .3s;z-index:300;pointer-events:none;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* FAMILY BOX */
+.family-box{background:linear-gradient(135deg,rgba(37,99,235,.06),rgba(249,115,22,.04));border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow)}
+.family-box .fam-icon{font-size:2rem}
+.family-box p{font-size:.8rem;color:var(--muted);line-height:1.6}
+.family-box strong{color:var(--text)}
+
+/* RESPONSIVE */
+@media(max-width:380px){
+  .app-links{grid-template-columns:1fr}
+  header h1{font-size:1.35rem}
+  .tabs{gap:2px}
+  .tab{font-size:.7rem;padding:8px 3px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="loader-logo">⚡</div>
+  <div class="loader-bar"><div class="loader-fill"></div></div>
+  <div class="loader-text">در حال بارگذاری...</div>
+</div>
+
+<!-- LOGIN -->
+<div id="loginOverlay">
+  <div id="loginBox">
+    <span class="lb-icon">🔐</span>
+    <h2>کانفیگ پرسرعت</h2>
+    <p>برای دسترسی به کانفیگ‌ها رمز را وارد کنید</p>
+    <div class="lb-label">رمز عبور</div>
+    <input id="pw" type="password" placeholder="رمز عبور را وارد کنید" onkeydown="if(event.key==='Enter')checkLogin()"/>
+    <button onclick="checkLogin()">ورود ⬅️</button>
+    <div id="loginError">❌ رمز اشتباه است</div>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-logo">
+    <span>⚡</span> کانفیگ پرسرعت
+  </div>
+  <div class="topbar-actions">
+    <button class="icon-btn" onclick="toggleDark()" id="darkBtn">🌙 شب</button>
+    <button class="icon-btn" onclick="toggleAdmin()">🔧</button>
+  </div>
+</div>
+
+<!-- NOTICE BAR -->
+<div class="notice-bar" id="noticeBar">
+  <span class="notice-icon">📢</span>
+  <span id="noticeText">کانفیگ‌های جدید اضافه شدن — از تب «کانفیگ‌های آزاد» استفاده کنید</span>
+  <span class="notice-close" onclick="document.getElementById('noticeBar').style.display='none'">✕</span>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-3d">⚡</div>
+  <h1>کانفیگ پرسرعت</h1>
+  <p>کانفیگ‌های اختصاصی برای اعضای خانواده</p>
+  <div class="header-stats">
+    <div class="stat-pill" id="activeCount">⚡ ۷ کانفیگ فعال</div>
+    <div class="stat-pill">🔒 رمزنگاری TLS</div>
+    <div class="stat-pill">🌐 Cloudflare CDN</div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ADMIN PANEL -->
+  <div id="adminPanel">
+    <h3>🔧 پنل مدیریت</h3>
+    <input class="admin-input" id="adminNotice" placeholder="متن اطلاعیه جدید..." value="کانفیگ‌های جدید اضافه شدن — از تب «کانفیگ‌های آزاد» استفاده کنید"/>
+    <button class="btn-admin" onclick="updateNotice()">بروزرسانی اطلاعیه</button>
+  </div>
+
+  <div class="family-box">
+    <div class="fam-icon">👨‍👩‍👧‍👦</div>
+    <p><strong>اعضای مجاز خانواده</strong><br>دسترسی فقط برای اعضای خانواده مجاز است.</p>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('configs',this)">⚡ آزاد</button>
+    <button class="tab" onclick="switchTab('news',this)">📢 اخبار</button>
+    <button class="tab" onclick="switchTab('guide',this)">📖 راهنما</button>
+    <button class="tab" onclick="switchTab('apps',this)">📱 اپ‌ها</button>
+    <button class="tab" onclick="switchTab('vip',this)">👑 VIP</button>
+    <button class="tab" onclick="switchTab('payment',this)">💳 پرداخت</button>
+  </div>
+
+  <!-- CONFIGS TAB -->
+  <div class="tab-panel active" id="tab-configs">
+    <div class="section-label">
+      کانفیگ‌های آزاد
+      <span class="config-count" id="cfgCount">۷ فعال</span>
+    </div>
+
+    <div class="config-card">
+      <div class="config-header">
+        <div class="config-meta">
+          <span class="config-flag">☁️</span>
+          <div>
+            <div class="config-title">قوی وصله — CF 1</div>
+            <div class="config-subtitle">VLESS · TLS · WebSocket · port 443</div>
+            <div class="config-updated">🕐 آخرین بروزرسانی: ۱۱ خرداد ۱۴۰۵</div>
+          </div>
+        </div>
+        <span class="badge fast">فعال</span>
+      </div>
+      <div class="config-body">
+        <div class="config-string" id="cfg1">vless://956b1c4d-ba6e-41f5-9861-60394ba722f6@104.19.99.79:443?path=%2FeyJqdW5rIjoiVlhDT0prV0FCWllYY1VKMCIsInByb3RvY29sIjoidmwiLCJtb2RlIjoiIiwicGFuZWxJUHMiOiJbMjYwMjpmYzU5OmIwOjY0OjpdIn0%3D%3Fed%3D2560&security=tls&alpn=http%2F1.1&encryption=none&insecure=0&host=bpb-panel-74cc.r21756126.workers.dev&fp=chrome&type=ws&allowInsecure=0&sni=bPB-PaNEl-74CC.r21756126.WoRKers.dEv#%D9%82%D9%88%DB%8C%20%D9%88%D8%B5%D9%84%D9%87</div>
+        <div class="btn-row">
+          <button class="btn btn-copy" onclick="copyConfig('cfg1',this)">📋 کپی کانفیگ</button>
+          <button class="btn btn-qr" onclick="showQR('cfg1','قوی وصله — CF 1')">QR</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="config-card">
+      <div class="config-header">
+        <div class="config-meta">
+          <span class="config-flag">☁️</span>
+          <div>
+            <div class="config-title">وصله ۲ — CF 2</div>
+            <div class="config-subtitle">Trojan · TLS · WebSocket · port 443</div>
+            <div class="config-updated">🕐 آخرین بروزرسانی: ۱۱ خرداد ۱۴۰۵</div>
+          </div>
+        </div>
+        <span class="badge fast">فعال</span>
+      </div>
+      <div class="config-body">
+        <div class="config-string" id="cfg2">trojan://4c3b0878116d4b6cb7a364ace0e812b0@172.67.137.163:443?path=%2FeyJqdW5rIjoiYWhZaVl0aTVHIiwicHJvdG9jb2wiOiJ0ciIsIm1vZGUiOiIiLCJwYW5lbElQcyI6IlsyNjAyOmZjNTk6YjA6NjQ6Ol0ifQ%3D%3D%3Fed%3D2560&security=tls&alpn=http%2F1.1&insecure=0&host=bpb-panel-74cc.r21756126.workers.dev&fp=chrome&type=ws&allowInsecure=0&sni=BPB-PaNel-74CC.r21756126.woRkErS.DEv#%D9%88%D8%B5%D9%84%D9%87%202</div>
+        <div class="btn-row">
+          <button class="btn btn-copy" onclick="copyConfig('cfg2',this)">📋 کپی کانفیگ</button>
+          <button class="btn btn-qr" onclick="showQR('cfg2','وصله ۲ — CF 2')">QR</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="config-card">
+      <div class="config-header">
+        <div class="config-meta">
+          <span class="config-flag">☁️</span>
+          <div>
+            <div class="config-title">وصله ۳ — CF 3</div>
+            <div class="config-subtitle">Trojan · TLS · WebSocket · port 443</div>
+            <div class="config-updated">🕐 آخرین بروزرسانی: ۱۱ خرداد ۱۴۰۵</div>
+          </div>
+        </div>
+        <span class="badge fast">فعال</span>
+      </div>
+      <div class="config-body">
+        <div class="config-string" id="cfg3">trojan://4c3b0878116d4b6cb7a364ace0e812b0@www.speedtest.net:443?path=%2FeyJqdW5rIjoiRVNrbVIxbGh0R0dtTXoiLCJwcm90b2NvbCI6InRyIiwibW9kZSI6IiIsInBhbmVsSVBzIjoiWzI2MDI6ZmM1OTpiMDo2NDo6XSJ9%3Fed%3D2560&security=tls&alpn=http%2F1.1&insecure=0&host=bpb-panel-74cc.r21756126.workers.dev&fp=chrome&type=ws&allowInsecure=0&sni=bPB-PAneL-74Cc.R21756126.wORKeRS.DEV#%D9%88%D8%B5%D9%84%D9%87%203</div>
+        <div class="btn-row">
+          <button class="btn btn-copy" onclick="copyConfig('cfg3',this)">📋 کپی کانفیگ</button>
+          <button class="btn btn-qr" onclick="showQR('cfg3','وصله ۳ — CF 3')">QR</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="config-card">
+      <div class="config-header">
+        <div class="config-meta">
+          <span class="config-flag">☁️</span>
+          <div>
+            <div class="config-title">وصله ۴ — CF 4</div>
+            <div class="config-subtitle">Trojan · TLS · WebSocket · port 443</div>
+            <div class="config-updated">🕐 آخرین بروزرسانی: ۱۱ خرداد ۱۴۰۵</div>
+          </div>
+        </div>
+        <span class="badge fast">فعال</span>
+      </div>
+      <div class="config-body">
+        <div class="config-string" id="cfg4">trojan://4c3b0878116d4b6cb7a364ace0e812b0@www.speedtest.net:443?path=%2FeyJqdW5rIjoiRVNrbVIxbGh0R0dtTXoiLCJwcm90b2NvbCI6InRyIiwibW9kZSI6IiIsInBhbmVsSVBzIjoiWzI2MDI6ZmM1OTpiMDo2NDo6XSJ9%3Fed%3D2560&security=tls&alpn=http%2F1.1&insecure=0&host=bpb-panel-74cc.r21756126.workers.dev&fp=chrome&type=ws&allowInsecure=0&sni=bPB-PAneL-74Cc.R21756126.wORKeRS.DEV#%D9%88%D8%B5%D9%84%D9%87%204</div>
+        <div class="btn-row">
+          <button class="btn btn-copy" onclick="copyConfig('cfg4',this)">📋 کپی کانفیگ</button>
+          <button class="btn btn-qr" onclick="showQR('cfg4','وصله ۴ — CF 4')">QR</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="config-card">
+      <div class="config-header">
+        <div class="config-meta">
+          <span class="config-flag">☁️</span>
+          <div>
+            <div class="config-title">وصله ۵ — CF 5</div>
+            <div class="config-subtitle">VLESS · TLS · WebSocket · port 443</div>
+            <div class="config-updated">🕐 آخرین بروزرسانی: ۱۱ خرداد ۱۴۰۵</div>
+          </div>
+        </div>
+        <span class="badge fast">فعال</span>
+      </div>
+      <div class="config-body">
+        <div class="config-string" id="cfg5">vless://956b1c4d-ba6e-41f5-9861-60394ba722f6@172.67.137.163:443?path=%2FeyJqdW5rIjoiMDRMV1I0T3c5WVBRNUpYIiwicHJvdG9jb2wiOiJ2bCIsIm1vZGUiOiIiLCJwYW5lbElQcyI6IlsyNjAyOmZjNTk6YjA6NjQ6Ol0ifQ%3D%3D%3Fed%3D2560&security=tls&alpn=http%2F1.1&encryption=none&insecure=0&host=bpb-panel-74cc.r21756126.workers.dev&fp=chrome&type=ws&allowInsecure=0&sni=BPB-PaNel-74CC.r21756126.woRkErS.DEv#%D9%88%D8%B5%D9%84%D9%87%205</div>
+        <div class="btn-row">
+          <button class="btn btn-copy" onclick="copyConfig('cfg5',this)">📋 کپی کانفیگ</button>
+          <button class="btn btn-qr" onclick="showQR('cfg5','وصله ۵ — CF 5')">QR</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="config-card">
+      <div class="config-header">
+        <div class="config-meta">
+          <span class="config-flag">☁️</span>
+          <div>
+            <div class="config-title">وصله ۶ — CF 6</div>
+            <div class="config-subtitle">VLESS · TLS · WebSocket · port 443</div>
+            <div class="config-updated">🕐 آخرین بروزرسانی: ۱۱ خرداد ۱۴۰۵</div>
+          </div>
+        </div>
+        <span class="badge fast">فعال</span>
+      </div>
+      <div class="config-body">
+        <div class="config-string" id="cfg6">vless://956b1c4d-ba6e-41f5-9861-60394ba722f6@104.21.78.216:443?path=%2FeyJqdW5rIjoiZG1VMGJPQlI4a3E2Y3Q0ZyIsInByb3RvY29sIjoidmwiLCJtb2RlIjoiIiwicGFuZWxJUHMiOiJbMjYwMjpmYzU5OmIwOjY0OjpdIn0%3D%3Fed%3D2560&security=tls&alpn=http%2F1.1&encryption=none&insecure=0&host=bpb-panel-74cc.r21756126.workers.dev&fp=chrome&type=ws&allowInsecure=0&sni=bPB-PANel-74CC.r21756126.WorkerS.dEv#%D9%88%D8%B5%D9%84%D9%87%206</div>
+        <div class="btn-row">
+          <button class="btn btn-copy" onclick="copyConfig('cfg6',this)">📋 کپی کانفیگ</button>
+          <button class="btn btn-qr" onclick="showQR('cfg6','وصله ۶ — CF 6')">QR</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="config-card">
+      <div class="config-header">
+        <div class="config-meta">
+          <span class="config-flag">☁️</span>
+          <div>
+            <div class="config-title">وصله ۷ — CF 7</div>
+            <div class="config-subtitle">VLESS · TLS · WebSocket · port 443</div>
+            <div class="config-updated">🕐 آخرین بروزرسانی: ۱۱ خرداد ۱۴۰۵</div>
+          </div>
+        </div>
+        <span class="badge fast">فعال</span>
+      </div>
+      <div class="config-body">
+        <div class="config-string" id="cfg7">vless://956b1c4d-ba6e-41f5-9861-60394ba722f6@www.speedtest.net:443?path=%2FeyJqdW5rIjoicmprYnJCdUNLZWp1c0syIiwicHJvdG9jb2wiOiJ2bCIsIm1vZGUiOiIiLCJwYW5lbElQcyI6IlsyNjAyOmZjNTk6YjA6NjQ6Ol0ifQ%3D%3D%3Fed%3D2560&security=tls&alpn=http%2F1.1&encryption=none&insecure=0&host=bpb-panel-74cc.r21756126.workers.dev&fp=chrome&type=ws&allowInsecure=0&sni=bPB-PAneL-74Cc.R21756126.wORKeRS.DEV#%D9%88%D8%B5%D9%84%D9%87%207</div>
+        <div class="btn-row">
+          <button class="btn btn-copy" onclick="copyConfig('cfg7',this)">📋 کپی کانفیگ</button>
+          <button class="btn btn-qr" onclick="showQR('cfg7','وصله ۷ — CF 7')">QR</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEWS TAB -->
+  <div class="tab-panel" id="tab-news">
+    <div class="section-label">اخبار و اطلاعیه‌ها</div>
+    <div class="news-card">
+      <div class="news-date">۱۱ خرداد ۱۴۰۵</div>
+      <div class="news-title">🆕 کانفیگ‌های جدید اضافه شدن</div>
+      <div class="news-body">سه کانفیگ جدید با Workers آدرس cool-frog اضافه شد. برای بهترین سرعت از کانفیگ «این وصله» استفاده کنید.</div>
+    </div>
+    <div class="news-card">
+      <div class="news-date">۱۰ خرداد ۱۴۰۵</div>
+      <div class="news-title">🎨 طراحی سایت بروزرسانی شد</div>
+      <div class="news-body">سایت با طراحی جدید و امکانات بیشتر مثل حالت شب، پنل مدیریت و بخش VIP بروز شد.</div>
+    </div>
+    <div class="news-card">
+      <div class="news-date">۵ خرداد ۱۴۰۵</div>
+      <div class="news-title">💎 کانفیگ VIP راه‌اندازی شد</div>
+      <div class="news-body">امکان خرید کانفیگ VIP با سرعت و پایداری بالاتر فراهم شد. قیمت هر کانفیگ ۶۰ هزار تومان.</div>
+    </div>
+  </div>
+
+  <!-- GUIDE TAB -->
+  <div class="tab-panel" id="tab-guide">
+    <div class="guide-box">
+      <h3>📱 اندروید — v2rayNG</h3>
+      <div class="guide-step"><div class="step-num">۱</div><p>اپ <strong>v2rayNG</strong> رو از تب اپ‌ها دانلود کن</p></div>
+      <div class="guide-step"><div class="step-num">۲</div><p>کانفیگ دلخواه رو <strong>کپی</strong> کن</p></div>
+      <div class="guide-step"><div class="step-num">۳</div><p>در v2rayNG روی <strong>+</strong> بزن → <strong>Import from clipboard</strong></p></div>
+      <div class="guide-step"><div class="step-num">۴</div><p>روی کانفیگ نگه‌دار و <strong>Start</strong> بزن</p></div>
+    </div>
+    <div class="guide-box">
+      <h3>📱 اندروید — ویتوری</h3>
+      <div class="guide-step"><div class="step-num">۱</div><p>اپ <strong>ویتوری VPN</strong> رو نصب کن</p></div>
+      <div class="guide-step"><div class="step-num">۲</div><p>کانفیگ رو <strong>کپی</strong> کن</p></div>
+      <div class="guide-step"><div class="step-num">۳</div><p>روی <strong>+</strong> بزن → <strong>از کلیپبورد وارد کن</strong></p></div>
+      <div class="guide-step"><div class="step-num">۴</div><p><strong>Connect</strong> بزن</p></div>
+    </div>
+    <div class="guide-box">
+      <h3>🍎 آیفون — Streisand</h3>
+      <div class="guide-step"><div class="step-num">۱</div><p><strong>Streisand</strong> رو از App Store نصب کن</p></div>
+      <div class="guide-step"><div class="step-num">۲</div><p>دکمه <strong>QR</strong> کنار کانفیگ رو بزن</p></div>
+      <div class="guide-step"><div class="step-num">۳</div><p>در اپ <strong>اسکن QR</strong> رو بزن و QR رو اسکن کن</p></div>
+      <div class="guide-step"><div class="step-num">۴</div><p>فعال کن ✅</p></div>
+    </div>
+    <div class="guide-box">
+      <h3>💻 ویندوز — v2rayN</h3>
+      <div class="guide-step"><div class="step-num">۱</div><p><strong>v2rayN</strong> رو دانلود و نصب کن</p></div>
+      <div class="guide-step"><div class="step-num">۲</div><p>کانفیگ رو کپی کن</p></div>
+      <div class="guide-step"><div class="step-num">۳</div><p>منوی <strong>Servers → Import from clipboard</strong></p></div>
+      <div class="guide-step"><div class="step-num">۴</div><p><strong>Ctrl+Enter</strong> بزن</p></div>
+    </div>
+  </div>
+
+  <!-- APPS TAB -->
+  <div class="tab-panel" id="tab-apps">
+    <div class="section-label">اندروید 📱</div>
+    <div class="app-links">
+      <a class="app-link" href="https://github.com/2dust/v2rayNG/releases/latest" target="_blank">
+        <span class="app-icon">🔧</span>
+        <div class="app-info"><span>v2rayNG</span><small>پیشنهادی — GitHub</small></div>
+      </a>
+      <a class="app-link" href="https://play.google.com/store/apps/details?id=v2.vpn.fast" target="_blank">
+        <span class="app-icon">⚡</span>
+        <div class="app-info"><span>ویتوری VPN</span><small>گوگل پلی</small></div>
+      </a>
+    </div>
+    <div class="app-links">
+      <a class="app-link" href="https://play.google.com/store/apps/details?id=com.napsternetlabs.napsternetv" target="_blank">
+        <span class="app-icon">🌀</span>
+        <div class="app-info"><span>Npv Tunnel</span><small>گوگل پلی</small></div>
+      </a>
+      <a class="app-link" href="https://github.com/hiddify/hiddify-next/releases/latest" target="_blank">
+        <span class="app-icon">🛡️</span>
+        <div class="app-info"><span>Hiddify</span><small>ایرانی</small></div>
+      </a>
+    </div>
+    <div class="section-label" style="margin-top:16px">آیفون 🍎</div>
+    <div class="app-links">
+      <a class="app-link" href="https://apps.apple.com/app/streisand/id6450534064" target="_blank">
+        <span class="app-icon">🌟</span>
+        <div class="app-info"><span>Streisand</span><small>رایگان — پیشنهادی</small></div>
+      </a>
+      <a class="app-link" href="https://apps.apple.com/us/app/npv-tunnel/id1629465476" target="_blank">
+        <span class="app-icon">🌀</span>
+        <div class="app-info"><span>Npv Tunnel iOS</span><small>App Store</small></div>
+      </a>
+    </div>
+    <div class="section-label" style="margin-top:16px">ویندوز 💻</div>
+    <div class="app-links">
+      <a class="app-link" href="https://github.com/2dust/v2rayN/releases/latest" target="_blank">
+        <span class="app-icon">🖥️</span>
+        <div class="app-info"><span>v2rayN</span><small>پیشنهادی</small></div>
+      </a>
+      <a class="app-link" href="https://github.com/hiddify/hiddify-next/releases/latest" target="_blank">
+        <span class="app-icon">🌀</span>
+        <div class="app-info"><span>Hiddify</span><small>همه پلتفرم‌ها</small></div>
+      </a>
+    </div>
+  </div>
+
+  <!-- VIP TAB -->
+  <div class="tab-panel" id="tab-vip">
+    <div class="vip-banner">
+      <h3>👑 خرید کانفیگ VIP</h3>
+      <p>کانفیگ اختصاصی با سرعت و پایداری بالاتر</p>
+    </div>
+    <div class="vip-price">
+      <div><div class="price-label">قیمت هر کانفیگ VIP</div><div class="price-amount">۶۰,۰۰۰ تومان</div></div>
+      <span class="price-icon">💎</span>
+    </div>
+    <div class="guide-box" style="border-right-color:#c084fc">
+      <h3>✨ مزایای VIP</h3>
+      <div class="guide-step"><div class="step-num">✓</div><p><strong>سرعت اختصاصی</strong> بالاتر</p></div>
+      <div class="guide-step"><div class="step-num">✓</div><p><strong>پایداری بالا</strong> — کمتر قطع میشه</p></div>
+      <div class="guide-step"><div class="step-num">✓</div><p><strong>پشتیبانی مستقیم</strong> تلگرام</p></div>
+      <div class="guide-step"><div class="step-num">✓</div><p><strong>آپدیت خودکار</strong></p></div>
+    </div>
+    <div class="guide-box">
+      <h3>📋 مراحل خرید</h3>
+      <div class="guide-step"><div class="step-num">۱</div><p>به تب <strong>پرداخت</strong> برو</p></div>
+      <div class="guide-step"><div class="step-num">۲</div><p>مبلغ رو واریز کن و <strong>فیش</strong> بگیر</p></div>
+      <div class="guide-step"><div class="step-num">۳</div><p>فیش رو به <strong>@Farzadttnk</strong> بفرست</p></div>
+      <div class="guide-step"><div class="step-num">۴</div><p>کانفیگ VIP دریافت کن ✅</p></div>
+    </div>
+  </div>
+
+  <!-- PAYMENT TAB -->
+  <div class="tab-panel" id="tab-payment">
+    <div class="vip-banner">
+      <h3>💳 پرداخت کارت به کارت</h3>
+      <p>مبلغ را به شماره کارت زیر واریز کنید</p>
+    </div>
+    <div class="payment-box">
+      <h4>🏦 کارت به کارت</h4>
+      <div class="card-number-display">6219-8613-5400-0886</div>
+      <div class="card-owner">صاحب حساب: <strong>فرزاد</strong></div>
+      <button class="btn-copy-card" onclick="copyCard(this)">📋 کپی شماره کارت</button>
+    </div>
+    <div class="guide-box" style="border-right-color:var(--yellow)">
+      <h3>💰 مبلغ پرداختی</h3>
+      <div class="guide-step"><div class="step-num">﹩</div><p>برای هر <strong>کانفیگ VIP</strong> مبلغ <strong>۶۰,۰۰۰ تومان</strong></p></div>
+      <div class="guide-step"><div class="step-num">!</div><p>پس از پرداخت <strong>فیش</strong> را ارسال کنید</p></div>
+    </div>
+    <div class="telegram-box">
+      <div style="font-size:2rem;margin-bottom:8px">✈️</div>
+      <h4>تأیید پرداخت</h4>
+      <p>فیش واریزی را به آیدی زیر ارسال کنید</p>
+      <div class="tg-id">@Farzadttnk</div><br/>
+      <a class="btn-tg" href="https://t.me/Farzadttnk" target="_blank">✈️ ارسال فیش در تلگرام</a>
+    </div>
+  </div>
+
+</main>
+
+<!-- QR MODAL -->
+<div class="modal-overlay" id="qrModal" onclick="if(event.target===this)closeQR()">
+  <div class="modal">
+    <h3 id="qrTitle">QR کد</h3>
+    <div id="qrCanvas"></div>
+    <br/>
+    <button class="modal-close" onclick="closeQR()">بستن</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">✅ کپی شد!</div>
+
+<script>
+// LOADER
+window.addEventListener('load', function(){
+  setTimeout(function(){
+    document.getElementById('loader').classList.add('hide');
+    document.getElementById('loginOverlay').classList.add('show');
+  }, 1800);
+});
+
+// LOGIN
+function checkLogin(){
+  var p = document.getElementById('pw').value;
+  if(p === 'farzad Npv'){
+    document.getElementById('loginOverlay').classList.remove('show');
+  } else {
+    document.getElementById('loginError').style.display='block';
+    document.getElementById('pw').value='';
+    document.getElementById('pw').focus();
+  }
+}
+
+// DARK MODE
+var isDark = false;
+function toggleDark(){
+  isDark = !isDark;
+  document.body.classList.toggle('dark', isDark);
+  document.getElementById('darkBtn').textContent = isDark ? '☀️ روز' : '🌙 شب';
+}
+
+// ADMIN
+var adminVisible = false;
+var adminClicks = 0;
+function toggleAdmin(){
+  adminClicks++;
+  if(adminClicks >= 5){
+    adminVisible = !adminVisible;
+    document.getElementById('adminPanel').style.display = adminVisible ? 'block' : 'none';
+    adminClicks = 0;
+  }
+}
+function updateNotice(){
+  var txt = document.getElementById('adminNotice').value;
+  document.getElementById('noticeText').textContent = txt;
+  document.getElementById('noticeBar').style.display = 'flex';
+  showToast('اطلاعیه بروز شد!');
+}
+
+// TABS
+function switchTab(id, el){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  el.classList.add('active');
+}
+
+// COPY CONFIG
+function copyConfig(id, btn){
+  var text = document.getElementById(id).textContent.trim();
+  navigator.clipboard.writeText(text).then(function(){
+    btn.classList.add('copied');
+    btn.innerHTML = '✅ کپی شد!';
+    showToast('کانفیگ کپی شد!');
+    setTimeout(function(){
+      btn.classList.remove('copied');
+      btn.innerHTML = '📋 کپی کانفیگ';
+    }, 2000);
+  });
+}
+
+// COPY CARD
+function copyCard(btn){
+  navigator.clipboard.writeText('6219861354000886').then(function(){
+    btn.textContent = '✅ کپی شد!';
+    showToast('شماره کارت کپی شد!');
+    setTimeout(function(){ btn.innerHTML = '📋 کپی شماره کارت'; }, 2500);
+  });
+}
+
+// TOAST
+function showToast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = '✅ ' + (msg||'کپی شد!');
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2200);
+}
+
+// QR
+function showQR(id, title){
+  var text = document.getElementById(id).textContent.trim();
+  document.getElementById('qrTitle').textContent = title;
+  var canvas = document.getElementById('qrCanvas');
+  canvas.innerHTML = '<p style="color:var(--muted);font-size:.8rem;padding:10px">در حال بارگذاری...</p>';
+  var img = new Image();
+  img.onload = function(){ canvas.innerHTML=''; canvas.appendChild(img); };
+  img.onerror = function(){ canvas.innerHTML='<p style="color:red;font-size:.8rem;padding:10px">خطا در نمایش QR</p>'; };
+  img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=10&data=' + encodeURIComponent(text);
+  img.style.cssText = 'width:220px;height:220px;border-radius:8px;display:block;';
+  document.getElementById('qrModal').classList.add('open');
+}
+function closeQR(){ document.getElementById('qrModal').classList.remove('open'); }
+</script>
+</body>
+</html>
